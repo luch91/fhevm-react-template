@@ -1,21 +1,63 @@
-# FHEVM React Template
+# FHEVM Universal SDK & React Template
 
-A minimal React frontend template for building FHEVM-enabled decentralized applications (dApps). This template provides a simple development interface for interacting with FHEVM smart contracts, specifically the `FHECounter.sol` contract.
+**A framework-agnostic FHEVM SDK with React template** for building confidential smart contract applications with Fully Homomorphic Encryption.
+
+> 🏆 **Built for Zama FHE Builder Program** - Features a universal SDK with state machine architecture, fluent APIs, and framework-agnostic core.
 
 ## 🚀 What is FHEVM?
 
 FHEVM (Fully Homomorphic Encryption Virtual Machine) enables computation on encrypted data directly on Ethereum. This template demonstrates how to build dApps that can perform computations while keeping data private.
 
-## ✨ Features
+## ✨ Key Features
 
-- **🔐 FHEVM Integration**: Built-in support for fully homomorphic encryption
+### 🎯 Universal FHEVM SDK
+- **Framework-Agnostic Core**: Works in Node.js, React, Vue, or any JavaScript environment
+- **State Machine Architecture**: Explicit state management for predictable behavior
+- **Fluent Encryption API**: Chainable, type-safe encryption builder
+- **Smart Caching**: Automatic EIP-712 signature caching for optimal performance
+- **React Hooks**: Modern hooks (`useFhevmClient`, `useFhevmEncrypt`, `useFhevmDecrypt`)
+- **TypeScript-First**: Full type safety with zero `any` in public APIs
+
+### 🎨 React Template
 - **⚛️ React + Next.js**: Modern, performant frontend framework
 - **🎨 Tailwind CSS**: Utility-first styling for rapid UI development
 - **🔗 RainbowKit**: Seamless wallet connection and management
 - **🌐 Multi-Network Support**: Works on both Sepolia testnet and local Hardhat node
 - **📦 Monorepo Structure**: Organized packages for SDK, contracts, and frontend
 
-## 📋 Prerequinextjss
+## 🚀 Quick SDK Usage
+
+### React (< 5 lines)
+```tsx
+import { useFhevmClient, useFhevmEncrypt, useFhevmDecrypt } from '@fhevm/sdk/react';
+
+const { instance } = useFhevmClient({ provider, chainId });
+const { encrypt } = useFhevmEncrypt({ instance, signer, contractAddress });
+const { decrypt } = useFhevmDecrypt({ instance, signer });
+
+// Encrypt → Send → Decrypt
+const encrypted = await encrypt(b => b.addUint8(42));
+await contract.myFunction(encrypted.handles[0], encrypted.inputProof);
+const value = await decrypt({ handle, contractAddress });
+```
+
+### Node.js (< 10 lines)
+```typescript
+import { FhevmClient, EncryptionBuilder, DecryptionHandler } from '@fhevm/sdk/core';
+
+const client = new FhevmClient();
+await client.initialize({ provider, chainId });
+
+const encrypted = await new EncryptionBuilder(client.instance!, contract, user)
+  .addUint8(42).encrypt();
+
+const handler = new DecryptionHandler(client.instance!, signer);
+const value = await handler.decrypt({ handle, contractAddress });
+```
+
+**📚 [Full SDK Documentation](packages/fhevm-sdk/README.md)** | **💡 [Examples](examples/)**
+
+## 📋 Prerequisites
 
 Before you begin, ensure you have:
 
@@ -126,28 +168,45 @@ This template uses a monorepo structure with three main packages:
 ```
 fhevm-react-template/
 ├── packages/
-│   ├── fhevm-hardhat-template/    # Smart contracts & deployment
-│   ├── fhevm-sdk/                 # FHEVM SDK package
-│   └── nextjs/                      # React frontend application
-└── scripts/                       # Build and deployment scripts
+│   ├── fhevm-sdk/                # 🎯 Universal FHEVM SDK (NEW!)
+│   │   ├── core/                 #    Framework-agnostic core
+│   │   │   ├── FhevmClient.ts   #    State machine
+│   │   │   ├── EncryptionBuilder.ts # Fluent encryption API
+│   │   │   └── DecryptionHandler.ts # Smart decryption
+│   │   └── react/                #    React hooks
+│   │       ├── useFhevmClient.ts
+│   │       ├── useFhevmEncrypt.ts
+│   │       └── useFhevmDecrypt.ts
+│   ├── fhevm-hardhat-template/  # Smart contracts & deployment
+│   └── nextjs/                  # React frontend application
+├── examples/                    # SDK usage examples
+│   ├── node-example.js         # Node.js example
+│   └── README.md               # Example documentation
+└── scripts/                    # Build and deployment scripts
 ```
 
 ### Key Components
 
-#### 🔗 FHEVM Integration (`packages/nextjs/hooks/fhecounter-example/`)
-- **`useFHECounterWagmi.tsx`**: Example hook demonstrating FHEVM contract interaction
-- Essential hooks for FHEVM-enabled smart contract communication
-- Easily copyable to any FHEVM + React project
+#### 🎯 **NEW: Universal FHEVM SDK** (`packages/fhevm-sdk/`)
+The star of this template! A complete rewrite featuring:
+- **Framework-Agnostic Core**: Works anywhere JavaScript runs
+- **State Machine**: Explicit, predictable state management
+- **Fluent APIs**: Chainable encryption with validation
+- **Smart Caching**: EIP-712 signature reuse
+- **Full TypeScript**: Type-safe from end to end
 
-#### 🎣 Wallet Management (`packages/nextjs/hooks/helper/`)
-- MetaMask wallet provider hooks
-- Compatible with EIP-6963 standard
-- Easily adaptable for other wallet providers
+📚 **[Complete SDK Documentation](packages/fhevm-sdk/README.md)**
 
-#### 🔧 Flexibility
-- Replace `ethers.js` with `Wagmi` or other React-friendly libraries
-- Modular architecture for easy customization
-- Support for multiple wallet providers
+#### 🔗 React Integration (`packages/nextjs/hooks/`)
+- Modern hooks using the new SDK
+- **`useFHECounterNew.tsx`**: Example hook with new SDK
+- **`useFHECounterWagmi.tsx`**: Legacy hook (backwards compatible)
+- Wallet management with RainbowKit
+
+#### 💡 Examples (`examples/`)
+- **Node.js script**: Demonstrates framework-agnostic core
+- **React app**: Full Next.js integration
+- Shows same core logic in different environments
 
 ## 📚 Additional Resources
 

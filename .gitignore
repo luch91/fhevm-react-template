@@ -9,3 +9,6 @@ packages/*/.turbo
 packages/*/coverage
 tmp*
 .vscode
+.claude
+SUBMISSION.md
+IMPLEMENTATION.md
