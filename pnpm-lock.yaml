@@ -176,7 +176,7 @@ importers:
 
   packages/nextjs:
     dependencies:
-      '@fhevm-sdk':
+      '@fhevm/sdk':
         specifier: workspace:*
         version: link:../fhevm-sdk
       '@heroicons/react':

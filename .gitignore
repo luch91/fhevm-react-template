@@ -12,3 +12,5 @@ tmp*
 .claude
 SUBMISSION.md
 IMPLEMENTATION.md
+DAY4-SUMMARY.md
+generateTsAbis.ts

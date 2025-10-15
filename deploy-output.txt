@@ -1,0 +1,21 @@
+
+> root@0.4.0 deploy:localhost C:\Users\user\Desktop\ZAMA FHE template\fhevm-react-template
+> pnpm hardhat:deploy && pnpm generate
+
+
+> root@0.4.0 hardhat:deploy C:\Users\user\Desktop\ZAMA FHE template\fhevm-react-template
+> pnpm --filter ./packages/hardhat deploy:localhost
+
+
+> fhevm-hardhat-template@0.1.0 deploy:localhost C:\Users\user\Desktop\ZAMA FHE template\fhevm-react-template\packages\hardhat
+> hardhat deploy --network localhost
+
+Downloading compiler 0.8.27
+[31m[1mError[22m[39m [31m[1mHH502:[22m[39m Couldn't download compiler version list. Please check your internet connection and try again.
+
+For more info go to https://hardhat.org/HH502 or run Hardhat with --show-stack-traces
+C:\Users\user\Desktop\ZAMA FHE template\fhevm-react-template\packages\hardhat:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  fhevm-hardhat-template@0.1.0 deploy:localhost: `hardhat deploy --network localhost`
+Exit status 1
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.
