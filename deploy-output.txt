@@ -11,11 +11,13 @@
 > hardhat deploy --network localhost
 
 Downloading compiler 0.8.27
-[31m[1mError[22m[39m [31m[1mHH502:[22m[39m Couldn't download compiler version list. Please check your internet connection and try again.
+Generating typings for: 11 artifacts in dir: types for target: ethers-v6
+Successfully generated 38 typings!
+Compiled 7 Solidity files successfully (evm target: cancun).
+deploying "FHECounter" (tx: 0x348e50d445afb43f8ba9739b3554c66a7a97ad6b758523df74a38d6cfdd257e2)...: deployed at 0x5FbDB2315678afecb367f032d93F642f64180aa3 with 546311 gas
+FHECounter contract:  0x5FbDB2315678afecb367f032d93F642f64180aa3
 
-For more info go to https://hardhat.org/HH502 or run Hardhat with --show-stack-traces
-C:\Users\user\Desktop\ZAMA FHE template\fhevm-react-template\packages\hardhat:
- ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  fhevm-hardhat-template@0.1.0 deploy:localhost: `hardhat deploy --network localhost`
-Exit status 1
- ELIFECYCLE  Command failed with exit code 1.
- ELIFECYCLE  Command failed with exit code 1.
+> root@0.4.0 generate C:\Users\user\Desktop\ZAMA FHE template\fhevm-react-template
+> ts-node ./scripts/generateTsAbis.ts
+
+📝 Updated TypeScript contract definition file on ./packages/nextjs/contracts/deployedContracts.ts

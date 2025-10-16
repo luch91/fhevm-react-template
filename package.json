@@ -75,5 +75,12 @@
       "utf-8-validate",
       "yarn"
     ]
-  }
+  },
+  "description": "**A framework-agnostic FHEVM SDK with React template** for building confidential smart contract applications with Fully Homomorphic Encryption.",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "keywords": [],
+  "author": ""
 }

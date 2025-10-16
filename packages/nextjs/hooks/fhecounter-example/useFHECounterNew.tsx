@@ -61,7 +61,7 @@ export function useFHECounterNew(params: UseFHECounterNewParams) {
   // ============================================================================
 
   const {
-    encrypt,
+    encryptToHex,
     isEncrypting,
     error: encryptError,
   } = useFhevmEncrypt({
@@ -162,7 +162,7 @@ export function useFHECounterNew(params: UseFHECounterNewParams) {
         setMessage(`Encrypting ${operation} value (${absValue})...`);
 
         // NEW SDK: Use fluent encryption builder
-        const encrypted = await encrypt((builder) => {
+        const encrypted = await encryptToHex((builder) => {
           builder.addUint8(absValue);
         });
 
@@ -198,7 +198,7 @@ export function useFHECounterNew(params: UseFHECounterNewParams) {
       contractInfo,
       contractAddress,
       isProcessing,
-      encrypt,
+      encryptToHex,
       writeContractAsync,
       refetchHandle,
     ]
