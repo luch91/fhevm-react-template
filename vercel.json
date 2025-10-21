@@ -4,5 +4,6 @@
   "devCommand": "pnpm start",
   "installCommand": "cd packages/nextjs && pnpm install",
   "framework": "nextjs",
-  "outputDirectory": "packages/nextjs/.next"
+  "outputDirectory": "packages/nextjs/.next",
+  "version": 2
 }
