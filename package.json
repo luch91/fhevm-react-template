@@ -13,6 +13,7 @@
     ]
   },
   "scripts": {
+    "build": "cd packages/nextjs && yarn build",
     "chain": "pnpm hardhat:chain",
     "compile": "pnpm hardhat:compile",
     "deploy:localhost": "pnpm hardhat:deploy && pnpm generate",
