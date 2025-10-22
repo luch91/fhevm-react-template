@@ -54,10 +54,22 @@ export class EncryptionBuilder {
     userAddress: string
   ) {
     this._instance = instance;
-    this._input = instance.createEncryptedInput(
-      contractAddress,
-      userAddress
-    ) as RelayerEncryptedInput;
+
+    // Create encrypted input with runtime validation
+    const input = instance.createEncryptedInput(contractAddress, userAddress);
+
+    // Validate that the returned object has the expected methods
+    if (
+      !input ||
+      typeof input !== "object" ||
+      typeof (input as any).encrypt !== "function"
+    ) {
+      throw new Error(
+        "Invalid encrypted input: instance.createEncryptedInput did not return a valid object"
+      );
+    }
+
+    this._input = input as RelayerEncryptedInput;
   }
 
   /**
@@ -117,7 +129,7 @@ export class EncryptionBuilder {
    * Add an encrypted 128-bit unsigned integer
    */
   addUint128(value: bigint): this {
-    if (value < 0n || value >= (1n << 128n)) {
+    if (value < 0n || value >= 2n ** 128n) {
       throw new Error(`Invalid uint128 value: ${value}. Must be between 0 and 2^128-1`);
     }
     this._input.add128(value);
@@ -128,7 +140,7 @@ export class EncryptionBuilder {
    * Add an encrypted 256-bit unsigned integer
    */
   addUint256(value: bigint): this {
-    if (value < 0n || value >= (1n << 256n)) {
+    if (value < 0n || value >= 2n ** 256n) {
       throw new Error(`Invalid uint256 value: ${value}. Must be between 0 and 2^256-1`);
     }
     this._input.add256(value);
@@ -139,10 +151,17 @@ export class EncryptionBuilder {
    * Add an encrypted address
    */
   addAddress(value: string): this {
-    // Basic validation - ethers will do more thorough validation
+    // Validate address format
     if (!value.startsWith("0x") || value.length !== 42) {
       throw new Error(`Invalid address: ${value}. Must be 0x-prefixed 40-char hex string`);
     }
+
+    // Validate hex characters (case-insensitive)
+    const hexPattern = /^0x[0-9a-fA-F]{40}$/;
+    if (!hexPattern.test(value)) {
+      throw new Error(`Invalid address: ${value}. Contains non-hexadecimal characters`);
+    }
+
     this._input.addAddress(value);
     return this;
   }
@@ -179,9 +198,15 @@ export class EncryptionBuilder {
         inputProof: result.inputProof,
       };
     } catch (error) {
-      throw new Error(
-        `Encryption failed: ${error instanceof Error ? error.message : "Unknown error"}`
-      );
+      const message = error instanceof Error ? error.message : "Unknown error";
+      const encryptionError = new Error(`Encryption failed: ${message}`);
+
+      // Preserve original error as cause for better debugging
+      if (error instanceof Error) {
+        encryptionError.cause = error;
+      }
+
+      throw encryptionError;
     }
   }
 

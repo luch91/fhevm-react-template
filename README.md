@@ -72,7 +72,7 @@ Before you begin, ensure you have:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/zama-ai/fhevm-react-template.git
 cd fhevm-react-template
 
 # Initialize submodules (includes fhevm-hardhat-template)
@@ -160,6 +160,26 @@ When developing with MetaMask and Hardhat, you may encounter these common issues
 > 💡 **Pro Tip**: Always restart your browser after restarting Hardhat to avoid cache issues.
 
 For more details, see the [MetaMask development guide](https://docs.metamask.io/wallet/how-to/run-devnet/).
+
+### Windows-Specific Issues
+
+#### ❌ pnpm install fails
+
+**Problem**: On Windows, you may see TTY-related errors during `pnpm install`.
+
+**Solution**:
+```bash
+# Use the --force flag
+pnpm install --force
+```
+
+#### ❌ Scripts fail to run
+
+**Problem**: Some npm scripts use Unix-style commands that may not work on Windows.
+
+**Solution**:
+- Use Git Bash or WSL (Windows Subsystem for Linux)
+- Or ensure you have a Unix-like environment like Git for Windows installed
 
 ## 📁 Project Structure
 

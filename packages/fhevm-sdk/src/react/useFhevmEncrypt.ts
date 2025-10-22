@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import type { FhevmInstance } from "../fhevmTypes";
 import type { JsonRpcSigner } from "ethers";
 import { EncryptionBuilder, type EncryptedInput } from "../core/EncryptionBuilder";
@@ -121,12 +121,23 @@ export function useFhevmEncrypt(
 
   const [isEncrypting, setIsEncrypting] = useState(false);
   const [error, setError] = useState<Error | undefined>(undefined);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Check if encryption is available
   const canEncrypt = useMemo(
     () => Boolean(instance && signer && contractAddress),
     [instance, signer, contractAddress]
   );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Cancel any pending encryption on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // Create builder
   const createBuilder = useCallback(async (): Promise<EncryptionBuilder> => {
@@ -140,35 +151,84 @@ export function useFhevmEncrypt(
     return new EncryptionBuilder(instance, contractAddress, userAddress);
   }, [instance, signer, contractAddress]);
 
-  // Encrypt with builder function
-  const encrypt = useCallback(
-    async (
-      fn: (builder: EncryptionBuilder) => void | Promise<void>
-    ): Promise<EncryptedInput> => {
+  /**
+   * Internal method to perform encryption with common error handling
+   * @private
+   */
+  const performEncryption = useCallback(
+    async <T>(
+      fn: (builder: EncryptionBuilder) => void | Promise<void>,
+      encryptMethod: (builder: EncryptionBuilder) => Promise<T>
+    ): Promise<T> => {
       if (!canEncrypt) {
         throw new Error(
           "Cannot encrypt: missing instance, signer, or contract address"
         );
       }
 
+      // Cancel any existing encryption
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Create new abort controller for this operation
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
       setIsEncrypting(true);
       setError(undefined);
 
       try {
         const builder = await createBuilder();
+
+        // Check if aborted
+        if (abortController.signal.aborted) {
+          throw new Error("Encryption was cancelled");
+        }
+
         await fn(builder);
-        const result = await builder.encrypt();
+
+        // Check if aborted after builder function
+        if (abortController.signal.aborted) {
+          throw new Error("Encryption was cancelled");
+        }
+
+        const result = await encryptMethod(builder);
+
+        // Check if aborted after encryption
+        if (abortController.signal.aborted) {
+          throw new Error("Encryption was cancelled");
+        }
+
         return result;
       } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Encryption failed");
-        setError(error);
-        throw error;
+        // Don't set error if operation was aborted
+        if (!abortController.signal.aborted) {
+          const error =
+            err instanceof Error ? err : new Error("Encryption failed");
+          setError(error);
+          throw error;
+        }
+        throw new Error("Encryption was cancelled");
       } finally {
-        setIsEncrypting(false);
+        // Only clear encrypting state if this abort controller is still current
+        if (abortControllerRef.current === abortController) {
+          setIsEncrypting(false);
+          abortControllerRef.current = null;
+        }
       }
     },
     [canEncrypt, createBuilder]
+  );
+
+  // Encrypt with builder function
+  const encrypt = useCallback(
+    async (
+      fn: (builder: EncryptionBuilder) => void | Promise<void>
+    ): Promise<EncryptedInput> => {
+      return performEncryption(fn, (builder) => builder.encrypt());
+    },
+    [performEncryption]
   );
 
   // Encrypt to hex
@@ -176,30 +236,9 @@ export function useFhevmEncrypt(
     async (
       fn: (builder: EncryptionBuilder) => void | Promise<void>
     ): Promise<{ handles: `0x${string}`[]; inputProof: `0x${string}` }> => {
-      if (!canEncrypt) {
-        throw new Error(
-          "Cannot encrypt: missing instance, signer, or contract address"
-        );
-      }
-
-      setIsEncrypting(true);
-      setError(undefined);
-
-      try {
-        const builder = await createBuilder();
-        await fn(builder);
-        const result = await builder.encryptToHex();
-        return result;
-      } catch (err) {
-        const error =
-          err instanceof Error ? err : new Error("Encryption failed");
-        setError(error);
-        throw error;
-      } finally {
-        setIsEncrypting(false);
-      }
+      return performEncryption(fn, (builder) => builder.encryptToHex());
     },
-    [canEncrypt, createBuilder]
+    [performEncryption]
   );
 
   // Clear error

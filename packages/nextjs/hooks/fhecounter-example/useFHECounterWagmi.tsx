@@ -46,7 +46,6 @@ export const useFHECounterWagmi = (parameters: {
 
   type FHECounterInfo = Contract<"FHECounter"> & { chainId?: number };
 
-  const isRefreshing = false as unknown as boolean; // derived from wagmi below
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   // -------------
@@ -86,9 +85,9 @@ export const useFHECounterWagmi = (parameters: {
     const res = await readResult.refetch();
     if (res.error) setMessage("FHECounter.getCount() failed: " + (res.error as Error).message);
   }, [readResult]);
-  // derive isRefreshing from wagmi
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _derivedIsRefreshing = readResult.isFetching;
+
+  // Properly derive isRefreshing from wagmi
+  const isRefreshing = readResult.isFetching;
 
   // Wagmi handles initial fetch via `enabled`
 
@@ -152,16 +151,25 @@ export const useFHECounterWagmi = (parameters: {
       setMessage(`Starting ${op}(${valueAbs})...`);
       try {
         const { method, error } = getEncryptionMethodFor(op);
-        if (!method) return setMessage(error ?? "Encryption method not found");
+        if (!method) {
+          setMessage(error ?? "Encryption method not found");
+          return;
+        }
 
         setMessage(`Encrypting with ${method}...`);
         const enc = await encryptWith(builder => {
           (builder as any)[method](valueAbs);
         });
-        if (!enc) return setMessage("Encryption failed");
+        if (!enc) {
+          setMessage("Encryption failed");
+          return;
+        }
 
         const writeContract = getContract("write");
-        if (!writeContract) return setMessage("Contract info or signer not available");
+        if (!writeContract) {
+          setMessage("Contract info or signer not available");
+          return;
+        }
 
         const params = buildParamsFromAbi(enc, [...fheCounter!.abi] as any[], op);
         const tx = await (op === "increment" ? writeContract.increment(...params) : writeContract.decrement(...params));

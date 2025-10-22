@@ -5,6 +5,7 @@ import { useFhevm } from "@fhevm/sdk";
 import { useAccount } from "wagmi";
 import { RainbowKitCustomConnectButton } from "~~/components/helper/RainbowKitCustomConnectButton";
 import { useFHECounterWagmi } from "~~/hooks/fhecounter-example/useFHECounterWagmi";
+import { ErrorBoundary } from "~~/components/ErrorBoundary";
 
 /*
  * Main FHECounter React component with 3 buttons
@@ -88,6 +89,26 @@ export const FHECounterDemo = () => {
   const titleClass = "font-bold text-gray-900 text-xl mb-4 border-b-1 border-gray-700 pb-2";
   const sectionClass = "bg-[#f4f4f4] shadow-lg p-6 mb-6 text-gray-900";
 
+  // Helper functions for button text
+  const getDecryptButtonText = () => {
+    if (fheCounter.canDecrypt) return "🔓 Decrypt Counter";
+    if (fheCounter.isDecrypted) return `✅ Decrypted: ${fheCounter.clear}`;
+    if (fheCounter.isDecrypting) return "⏳ Decrypting...";
+    return "❌ Nothing to decrypt";
+  };
+
+  const getIncrementButtonText = () => {
+    if (fheCounter.canUpdateCounter) return "➕ Increment +1";
+    if (fheCounter.isProcessing) return "⏳ Processing...";
+    return "❌ Cannot increment";
+  };
+
+  const getDecrementButtonText = () => {
+    if (fheCounter.canUpdateCounter) return "➖ Decrement -1";
+    if (fheCounter.isProcessing) return "⏳ Processing...";
+    return "❌ Cannot decrement";
+  };
+
   if (!isConnected) {
     return (
       <div className="max-w-6xl mx-auto p-6 text-gray-900">
@@ -110,7 +131,8 @@ export const FHECounterDemo = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6 text-gray-900">
+    <ErrorBoundary>
+      <div className="max-w-6xl mx-auto p-6 space-y-6 text-gray-900">
       {/* Header */}
       <div className="text-center mb-8 text-black">
         <h1 className="text-3xl font-bold mb-2">FHE Counter Demo</h1>
@@ -133,13 +155,7 @@ export const FHECounterDemo = () => {
           disabled={!fheCounter.canDecrypt}
           onClick={fheCounter.decryptCountHandle}
         >
-          {fheCounter.canDecrypt
-            ? "🔓 Decrypt Counter"
-            : fheCounter.isDecrypted
-              ? `✅ Decrypted: ${fheCounter.clear}`
-              : fheCounter.isDecrypting
-                ? "⏳ Decrypting..."
-                : "❌ Nothing to decrypt"}
+          {getDecryptButtonText()}
         </button>
 
         <button
@@ -147,11 +163,7 @@ export const FHECounterDemo = () => {
           disabled={!fheCounter.canUpdateCounter}
           onClick={() => fheCounter.updateCounter(+1)}
         >
-          {fheCounter.canUpdateCounter
-            ? "➕ Increment +1"
-            : fheCounter.isProcessing
-              ? "⏳ Processing..."
-              : "❌ Cannot increment"}
+          {getIncrementButtonText()}
         </button>
 
         <button
@@ -159,11 +171,7 @@ export const FHECounterDemo = () => {
           disabled={!fheCounter.canUpdateCounter}
           onClick={() => fheCounter.updateCounter(-1)}
         >
-          {fheCounter.canUpdateCounter
-            ? "➖ Decrement -1"
-            : fheCounter.isProcessing
-              ? "⏳ Processing..."
-              : "❌ Cannot decrement"}
+          {getDecrementButtonText()}
         </button>
       </div>
 
@@ -201,6 +209,7 @@ export const FHECounterDemo = () => {
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 };
 
