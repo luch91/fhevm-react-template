@@ -3,5 +3,4 @@ node_modules
 *.log
 .DS_Store
 packages/hardhat
-packages/fhevm-sdk/src
-packages/fhevm-sdk/tests
+packages/fhevm-sdk/test
