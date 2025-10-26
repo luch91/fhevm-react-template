@@ -4,7 +4,7 @@
  * Provides decryption capabilities with React state management
  */
 "use client";
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { DecryptionHandler, } from "../core/DecryptionHandler";
 /**
  * Hook for decrypting FHEVM encrypted values
@@ -45,21 +45,36 @@ export function useFhevmDecrypt(options) {
     const [isDecrypting, setIsDecrypting] = useState(false);
     const [error, setError] = useState(undefined);
     const [handler, setHandler] = useState(undefined);
+    // Store storage and keypair in refs to prevent recreation on every render
+    const storageRef = useRef(storage);
+    const keypairRef = useRef(keypair);
+    // Update refs when storage/keypair change (allow intentional updates)
+    useEffect(() => {
+        storageRef.current = storage;
+    }, [storage]);
+    useEffect(() => {
+        keypairRef.current = keypair;
+    }, [keypair]);
     // Check if decryption is available
     const canDecrypt = useMemo(() => Boolean(instance && signer && handler), [instance, signer, handler]);
     // Create handler when instance and signer are available
+    // Only recreate when instance or signer actually change
     useEffect(() => {
         if (instance && signer) {
             const newHandler = new DecryptionHandler(instance, signer, {
-                storage,
-                keypair,
+                storage: storageRef.current,
+                keypair: keypairRef.current,
             });
             setHandler(newHandler);
         }
         else {
             setHandler(undefined);
         }
-    }, [instance, signer, storage, keypair]);
+        // Cleanup handler on unmount or when dependencies change
+        return () => {
+            // Future: Add cleanup method to DecryptionHandler if needed
+        };
+    }, [instance, signer]); // Only instance and signer in deps
     // Decrypt single value
     const decrypt = useCallback(async (request) => {
         if (!handler) {

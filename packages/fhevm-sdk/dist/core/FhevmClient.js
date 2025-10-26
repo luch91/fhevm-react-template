@@ -23,6 +23,8 @@ export class FhevmClientError extends Error {
  *
  * @example
  * ```typescript
+ * import { FhevmClient, EncryptionBuilder } from '@fhevm/sdk/core';
+ *
  * const client = new FhevmClient();
  *
  * // Subscribe to state changes
@@ -38,9 +40,12 @@ export class FhevmClientError extends Error {
  *
  * // Use when ready
  * if (client.state.status === 'ready') {
- *   const encrypted = await client.encrypt()
- *     .addUint8(42)
- *     .build();
+ *   const builder = new EncryptionBuilder(
+ *     client.state.instance,
+ *     contractAddress,
+ *     userAddress
+ *   );
+ *   const encrypted = await builder.addUint8(42).encrypt();
  * }
  * ```
  */
@@ -49,6 +54,9 @@ export class FhevmClient {
     _listeners = new Set();
     _abortController = null;
     _config = null;
+    _initializationId = 0; // Track initialization attempts
+    _listenerErrors = []; // Collect listener errors
+    static MAX_LISTENERS = 100; // Warn threshold
     /**
      * Current state of the client
      */
@@ -84,6 +92,11 @@ export class FhevmClient {
      */
     subscribe(listener) {
         this._listeners.add(listener);
+        // Warn if too many listeners (potential memory leak)
+        if (this._listeners.size > FhevmClient.MAX_LISTENERS) {
+            console.warn(`FhevmClient: ${this._listeners.size} listeners registered. ` +
+                `This may indicate a memory leak. Check for missing unsubscribe calls.`);
+        }
         return () => {
             this._listeners.delete(listener);
         };
@@ -92,6 +105,8 @@ export class FhevmClient {
      * Initialize the FHEVM client
      */
     async initialize(config) {
+        // Increment initialization ID to track this attempt
+        const currentInitId = ++this._initializationId;
         // Cancel any existing initialization
         if (this._abortController) {
             this._abortController.abort();
@@ -112,8 +127,8 @@ export class FhevmClient {
                     });
                 },
             });
-            // Check if aborted during initialization
-            if (signal.aborted) {
+            // Check if aborted during initialization or if a new init started
+            if (signal.aborted || currentInitId !== this._initializationId) {
                 return;
             }
             this._setState({ status: "ready", instance });
@@ -158,13 +173,34 @@ export class FhevmClient {
     _setState(state) {
         this._state = state;
         const event = { type: "stateChange", state };
+        // Clear previous listener errors
+        this._listenerErrors = [];
         this._listeners.forEach((listener) => {
             try {
                 listener(event);
             }
             catch (error) {
+                // Collect errors instead of just logging
+                const listenerError = error instanceof Error
+                    ? error
+                    : new Error(String(error));
+                this._listenerErrors.push(listenerError);
                 console.error("Error in FhevmClient listener:", error);
             }
         });
+    }
+    /**
+     * Get errors that occurred in listeners during last state change
+     * Useful for debugging listener issues
+     */
+    getListenerErrors() {
+        return [...this._listenerErrors];
+    }
+    /**
+     * Get the number of active listeners
+     * Useful for detecting memory leaks
+     */
+    getListenerCount() {
+        return this._listeners.size;
     }
 }

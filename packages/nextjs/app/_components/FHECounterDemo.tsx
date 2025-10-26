@@ -30,7 +30,15 @@ export const FHECounterDemo = () => {
     return (window as any).ethereum;
   }, []);
 
-  const initialMockChains = { 31337: "http://localhost:8545" };
+  // CRITICAL FIX: Only use mock chains for localhost (31337), NOT for Sepolia
+  // This prevents the SDK from trying to connect to localhost:8545 when on Sepolia
+  const initialMockChains = useMemo(() => {
+    if (chainId === 31337) {
+      return { 31337: "http://localhost:8545" };
+    }
+    // For Sepolia (11155111) or any other network, return undefined
+    return undefined;
+  }, [chainId]);
 
   const {
     instance: fhevmInstance,
@@ -86,8 +94,8 @@ export const FHECounterDemo = () => {
     buttonClass +
     " bg-[#A38025] text-[#2D2D2D] hover:bg-[#8F6E1E] focus-visible:ring-[#2D2D2D]";
 
-  const titleClass = "font-bold text-gray-900 text-xl mb-4 border-b-1 border-gray-700 pb-2";
-  const sectionClass = "bg-[#f4f4f4] shadow-lg p-6 mb-6 text-gray-900";
+  const titleClass = "font-extrabold text-black text-2xl mb-4 border-b-2 border-gray-800 pb-2";
+  const sectionClass = "bg-white shadow-lg p-6 mb-6 text-gray-900 border border-gray-200";
 
   // Helper functions for button text
   const getDecryptButtonText = () => {
@@ -113,14 +121,14 @@ export const FHECounterDemo = () => {
     return (
       <div className="max-w-6xl mx-auto p-6 text-gray-900">
         <div className="flex items-center justify-center">
-          <div className="bg-white bordershadow-xl p-8 text-center">
+          <div className="bg-white border border-gray-200 shadow-xl p-8 text-center rounded-lg">
             <div className="mb-4">
               <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-900/30 text-amber-400 text-3xl">
                 ⚠️
               </span>
             </div>
-            <h2 className="text-2xl font-extrabold text-gray-900 mb-2">Wallet not connected</h2>
-            <p className="text-gray-700 mb-6">Connect your wallet to use the FHE Counter demo.</p>
+            <h2 className="text-3xl font-extrabold text-black mb-3">Wallet not connected</h2>
+            <p className="text-lg text-gray-700 font-medium mb-6">Connect your wallet to use the FHE Counter demo.</p>
             <div className="flex items-center justify-center">
               <RainbowKitCustomConnectButton />
             </div>
@@ -134,9 +142,9 @@ export const FHECounterDemo = () => {
     <ErrorBoundary>
       <div className="max-w-6xl mx-auto p-6 space-y-6 text-gray-900">
       {/* Header */}
-      <div className="text-center mb-8 text-black">
-        <h1 className="text-3xl font-bold mb-2">FHE Counter Demo</h1>
-        <p className="text-gray-600">Interact with the Fully Homomorphic Encryption Counter contract</p>
+      <div className="text-center mb-8">
+        <h1 className="text-4xl font-extrabold mb-3 text-black">FHE Counter Demo</h1>
+        <p className="text-lg text-gray-700 font-medium">Interact with the Fully Homomorphic Encryption Counter contract</p>
       </div>
 
       {/* Count Handle Display */}
@@ -179,8 +187,8 @@ export const FHECounterDemo = () => {
       {fheCounter.message && (
         <div className={sectionClass}>
           <h3 className={titleClass}>💬 Messages</h3>
-          <div className="border bg-white border-gray-200 p-4">
-            <p className="text-gray-800">{fheCounter.message}</p>
+          <div className="bg-gray-50 border border-gray-300 p-4 rounded">
+            <p className="text-gray-900 font-medium">{fheCounter.message}</p>
           </div>
         </div>
       )}
@@ -232,9 +240,9 @@ function printProperty(name: string, value: unknown) {
     displayValue = JSON.stringify(value);
   }
   return (
-    <div className="flex justify-between items-center py-2 px-3 bg-white border border-gray-200 w-full">
-      <span className="text-gray-800 font-medium">{name}</span>
-      <span className="ml-2 font-mono text-sm font-semibold text-gray-900 bg-gray-100 px-2 py-1 border border-gray-300">
+    <div className="flex justify-between items-center py-3 px-4 bg-gray-50 border border-gray-300 rounded w-full">
+      <span className="text-black font-semibold text-base">{name}</span>
+      <span className="ml-2 font-mono text-sm font-bold text-black bg-gray-200 px-3 py-1.5 border border-gray-400 rounded">
         {displayValue}
       </span>
     </div>
@@ -243,13 +251,13 @@ function printProperty(name: string, value: unknown) {
 
 function printBooleanProperty(name: string, value: boolean) {
   return (
-    <div className="flex justify-between items-center py-2 px-3  bg-white border border-gray-200 w-full">
-      <span className="text-gray-700 font-medium">{name}</span>
+    <div className="flex justify-between items-center py-3 px-4 bg-gray-50 border border-gray-300 rounded w-full">
+      <span className="text-black font-semibold text-base">{name}</span>
       <span
-        className={`font-mono text-sm font-semibold px-2 py-1 border ${
+        className={`font-mono text-sm font-bold px-3 py-1.5 border rounded ${
           value
-            ? "text-green-800 bg-green-100 border-green-300"
-            : "text-red-800 bg-red-100 border-red-300"
+            ? "text-green-900 bg-green-100 border-green-400"
+            : "text-red-900 bg-red-100 border-red-400"
         }`}
       >
         {value ? "✓ true" : "✗ false"}

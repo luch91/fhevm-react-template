@@ -42,11 +42,11 @@ export class DecryptionHandler {
      */
     async decrypt(request) {
         const results = await this.decryptMany([request]);
-        const value = results[request.handle];
-        if (value === undefined) {
+        // Use hasOwnProperty to differentiate between undefined and missing
+        if (!Object.prototype.hasOwnProperty.call(results, request.handle)) {
             throw new Error(`Failed to decrypt handle: ${request.handle}`);
         }
-        return value;
+        return results[request.handle];
     }
     /**
      * Decrypt multiple encrypted values in one operation
@@ -63,17 +63,37 @@ export class DecryptionHandler {
         if (!signature) {
             throw new Error("Failed to create decryption signature");
         }
-        // Validate signature is still valid
+        // Validate signature is still valid - if expired, try to refresh
         if (!signature.isValid()) {
-            throw new Error("Decryption signature has expired");
+            // Clear expired signature from cache
+            await this.clearSignatureCache(uniqueAddresses);
+            // Try to get a fresh signature
+            const freshSignature = await FhevmDecryptionSignature.loadOrSign(this._instance, uniqueAddresses, this._signer, this._storage, this._keypair);
+            if (!freshSignature || !freshSignature.isValid()) {
+                throw new Error("Decryption signature has expired and could not be refreshed");
+            }
+            // Use the fresh signature
+            return await this._performDecryption(requests, freshSignature);
         }
-        // Call userDecrypt on instance
+        return await this._performDecryption(requests, signature);
+    }
+    /**
+     * Internal method to perform decryption with a signature
+     * @private
+     */
+    async _performDecryption(requests, signature) {
         try {
             const results = await this._instance.userDecrypt(requests, signature.privateKey, signature.publicKey, signature.signature, signature.contractAddresses, signature.userAddress, signature.startTimestamp, signature.durationDays);
             return results;
         }
         catch (error) {
-            throw new Error(`Decryption failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+            const message = error instanceof Error ? error.message : "Unknown error";
+            const decryptionError = new Error(`Decryption failed: ${message}`);
+            // Preserve original error as cause
+            if (error instanceof Error) {
+                decryptionError.cause = error;
+            }
+            throw decryptionError;
         }
     }
     /**
@@ -124,6 +144,40 @@ export class DecryptionHandler {
      */
     setStorage(storage) {
         this._storage = storage;
+    }
+    /**
+     * Clear cached signature for specific contract addresses
+     * Useful when signature expires or needs to be regenerated
+     */
+    async clearSignatureCache(contractAddresses) {
+        try {
+            const userAddress = await this._signer.getAddress();
+            const publicKey = this._keypair?.publicKey || "";
+            // Generate the same cache key used by FhevmDecryptionSignature
+            const sortedAddresses = [...contractAddresses].sort();
+            const cacheKey = `fhevm_signature_${userAddress}_${sortedAddresses.join("_")}_${publicKey}`;
+            await this._storage.removeItem(cacheKey);
+        }
+        catch (error) {
+            // Silently fail - cache clearing is not critical
+            console.warn("Failed to clear signature cache:", error);
+        }
+    }
+    /**
+     * Clear all cached signatures from storage
+     */
+    async clearAllSignatures() {
+        // Note: This is a best-effort implementation
+        // GenericStringStorage doesn't have a "clear all" method
+        // So we can only clear if the storage implementation supports it
+        if (typeof this._storage.clear === "function") {
+            try {
+                await this._storage.clear();
+            }
+            catch (error) {
+                console.warn("Failed to clear all signatures:", error);
+            }
+        }
     }
 }
 /**

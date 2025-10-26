@@ -36,3 +36,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 ipfs-upload.config.json
+packages/fhevm-sdk/dist/
+packages/nextjs/tsconfig.tsbuildinfo
+nul
+FIX_NOW.md
+AUDIT_REPORT.md
+CRITICAL_FIX.md
+SETUP_STEPS.md
+QUICK_START.md
+QUICK_START_UPDATED.md
+package-lock.json
+PRIVATE_KEY_SETUP.md
+VERCEL_DEPLOYMENT_GUIDE.md
+WINDOWS_FIX.md
+TYPESCRIPT_FIX.md
+deploy-output.txt

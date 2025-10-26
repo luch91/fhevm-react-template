@@ -51,6 +51,8 @@ type Unsubscribe = () => void;
  *
  * @example
  * ```typescript
+ * import { FhevmClient, EncryptionBuilder } from '@fhevm/sdk/core';
+ *
  * const client = new FhevmClient();
  *
  * // Subscribe to state changes
@@ -66,9 +68,12 @@ type Unsubscribe = () => void;
  *
  * // Use when ready
  * if (client.state.status === 'ready') {
- *   const encrypted = await client.encrypt()
- *     .addUint8(42)
- *     .build();
+ *   const builder = new EncryptionBuilder(
+ *     client.state.instance,
+ *     contractAddress,
+ *     userAddress
+ *   );
+ *   const encrypted = await builder.addUint8(42).encrypt();
  * }
  * ```
  */
@@ -77,6 +82,9 @@ export declare class FhevmClient {
     private _listeners;
     private _abortController;
     private _config;
+    private _initializationId;
+    private _listenerErrors;
+    private static readonly MAX_LISTENERS;
     /**
      * Current state of the client
      */
@@ -117,5 +125,15 @@ export declare class FhevmClient {
      * Internal method to update state and notify listeners
      */
     private _setState;
+    /**
+     * Get errors that occurred in listeners during last state change
+     * Useful for debugging listener issues
+     */
+    getListenerErrors(): readonly Error[];
+    /**
+     * Get the number of active listeners
+     * Useful for detecting memory leaks
+     */
+    getListenerCount(): number;
 }
 export {};

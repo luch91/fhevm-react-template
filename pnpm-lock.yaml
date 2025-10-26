@@ -181,7 +181,7 @@ importers:
     dependencies:
       '@fhevm/sdk':
         specifier: file:../fhevm-sdk
-        version: link:../fhevm-sdk
+        version: file:packages/fhevm-sdk(@fhevm/mock-utils@0.1.0(@zama-fhe/relayer-sdk@0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.3))(@zama-fhe/relayer-sdk@0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)
       '@heroicons/react':
         specifier: ~2.1.5
         version: 2.1.5(react@19.0.0)
@@ -833,6 +833,14 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  '@fhevm/sdk@file:packages/fhevm-sdk':
+    resolution: {directory: packages/fhevm-sdk, type: directory}
+    peerDependencies:
+      '@fhevm/mock-utils': ^0.1.0
+      '@zama-fhe/relayer-sdk': ^0.2.0
+      ethers: ^6.13.4
+      react: ^18.0.0 || ^19.0.0
 
   '@fhevm/solidity@0.8.0':
     resolution: {integrity: sha512-+jpjPcJbwE+eNRhCn4IwQ2mcH11W9TW0GepwJh0aWm/oN1pmvmapHkj3WiLtG+PorQ8LDMgaq7+LO8hyVYKEzA==}
@@ -8070,6 +8078,15 @@ snapshots:
       ethers: 6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     optionalDependencies:
       typescript: 5.9.2
+
+  '@fhevm/sdk@file:packages/fhevm-sdk(@fhevm/mock-utils@0.1.0(@zama-fhe/relayer-sdk@0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.3))(@zama-fhe/relayer-sdk@0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(react@19.0.0)':
+    dependencies:
+      '@fhevm/mock-utils': 0.1.0(@zama-fhe/relayer-sdk@0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.8.3)
+      '@zama-fhe/relayer-sdk': 0.2.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ethers: 6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      idb: 8.0.3
+      react: 19.0.0
+      rimraf: 6.0.1
 
   '@fhevm/solidity@0.8.0':
     dependencies:

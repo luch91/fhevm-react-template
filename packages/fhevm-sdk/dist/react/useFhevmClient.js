@@ -29,11 +29,18 @@ export function useFhevmClient(options) {
     const { provider, chainId, mockChains, enabled = true } = options;
     const [state, setState] = useState({ status: "idle" });
     const clientRef = useRef(null);
-    const configRef = useRef("");
-    // Create config key for comparison
-    const configKey = JSON.stringify({ provider, chainId, mockChains });
+    const prevChainIdRef = useRef(undefined);
+    const prevEnabledRef = useRef(undefined);
+    const isCleaningUpRef = useRef(false);
+    // Store mockChains in ref to avoid recreating config on every render
+    const mockChainsRef = useRef(mockChains);
+    mockChainsRef.current = mockChains;
     // Initialize client
     useEffect(() => {
+        // Skip if we're in the middle of cleanup
+        if (isCleaningUpRef.current) {
+            return;
+        }
         if (!enabled || !provider || !chainId) {
             // Destroy existing client if disabled or missing config
             if (clientRef.current) {
@@ -41,10 +48,14 @@ export function useFhevmClient(options) {
                 clientRef.current = null;
             }
             setState({ status: "idle" });
+            prevChainIdRef.current = undefined;
+            prevEnabledRef.current = enabled;
             return;
         }
-        // Check if config changed
-        const configChanged = configKey !== configRef.current;
+        // Check if config changed (using primitive comparisons only)
+        const chainIdChanged = chainId !== prevChainIdRef.current;
+        const enabledChanged = enabled !== prevEnabledRef.current;
+        const configChanged = chainIdChanged || enabledChanged;
         if (!clientRef.current) {
             // Create new client
             clientRef.current = new FhevmClient();
@@ -53,23 +64,32 @@ export function useFhevmClient(options) {
             });
         }
         // Initialize or refresh if config changed
-        if (configChanged) {
-            configRef.current = configKey;
+        if (configChanged || !clientRef.current.isReady) {
+            prevChainIdRef.current = chainId;
+            prevEnabledRef.current = enabled;
             clientRef.current
-                .initialize({ provider, chainId, mockChains })
+                .initialize({ provider, chainId, mockChains: mockChainsRef.current })
                 .catch((error) => {
                 // Error is already handled by state machine
-                console.error("FHEVM initialization failed:", error);
+                // Only log if not in an error state already
+                if (clientRef.current?.state.status !== "error") {
+                    console.error("FHEVM initialization failed:", error);
+                }
             });
         }
         // Cleanup
         return () => {
+            isCleaningUpRef.current = true;
             if (clientRef.current) {
                 clientRef.current.destroy();
                 clientRef.current = null;
             }
+            // Reset cleanup flag after a tick
+            setTimeout(() => {
+                isCleaningUpRef.current = false;
+            }, 0);
         };
-    }, [provider, chainId, mockChains, enabled, configKey]);
+    }, [provider, chainId, enabled]);
     // Refresh callback
     const refresh = useCallback(async () => {
         if (!clientRef.current) {

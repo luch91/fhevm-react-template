@@ -72,6 +72,11 @@ export declare class DecryptionHandler {
      */
     decryptMany(requests: DecryptionRequest[]): Promise<Record<string, DecryptedValue>>;
     /**
+     * Internal method to perform decryption with a signature
+     * @private
+     */
+    private _performDecryption;
+    /**
      * Decrypt multiple values and return them in order
      * Useful when you need results in a specific order
      */
@@ -93,6 +98,15 @@ export declare class DecryptionHandler {
      * Update the storage instance
      */
     setStorage(storage: GenericStringStorage): void;
+    /**
+     * Clear cached signature for specific contract addresses
+     * Useful when signature expires or needs to be regenerated
+     */
+    clearSignatureCache(contractAddresses: `0x${string}`[]): Promise<void>;
+    /**
+     * Clear all cached signatures from storage
+     */
+    clearAllSignatures(): Promise<void>;
 }
 /**
  * Helper to create a DecryptionHandler

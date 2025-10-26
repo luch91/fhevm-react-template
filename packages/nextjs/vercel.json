@@ -1,3 +1,7 @@
 {
-  "installCommand": "yarn install"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "cd ../.. && pnpm install && pnpm sdk:build && cd packages/nextjs && pnpm build",
+  "installCommand": "pnpm install --frozen-lockfile=false",
+  "framework": "nextjs",
+  "outputDirectory": ".next"
 }
